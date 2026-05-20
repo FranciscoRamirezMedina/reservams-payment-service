@@ -3,6 +3,7 @@ package com.duoc.reservams.paymentservice.service;
 import com.duoc.reservams.paymentservice.dto.PaymentRequestDTO;
 import com.duoc.reservams.paymentservice.dto.PaymentResponseDTO;
 import com.duoc.reservams.paymentservice.model.Payment;
+import com.duoc.reservams.paymentservice.client.ReservationClient;
 import com.duoc.reservams.paymentservice.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +17,12 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
 
-    public PaymentService(PaymentRepository paymentRepository) {
+    private final ReservationClient reservationClient;
+
+    public PaymentService(PaymentRepository paymentRepository,
+                          ReservationClient reservationClient) {
         this.paymentRepository = paymentRepository;
+        this.reservationClient = reservationClient;
     }
 
     public List<PaymentResponseDTO> findAll() {
@@ -84,6 +89,14 @@ public class PaymentService {
         payment.setPaidAt(LocalDateTime.now());
 
         Payment approvedPayment = paymentRepository.save(payment);
+
+        try {
+            // Cuando el pago se aprueba, se confirma la reserva asociada
+            reservationClient.confirmReservation(payment.getReservationId());
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Pago aprobado, pero no se pudo confirmar la reserva: " + ex.getMessage());
+        }
 
         return toResponseDTO(approvedPayment);
     }
