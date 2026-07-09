@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 
 // cliente Feign para comunicarse con reservation-service
-@FeignClient(name = "reservams-reservation-service")
+@FeignClient(name = "reservams-reservation-service", url = "${reservation.service.url:http://localhost:8086}")
 public interface ReservationClient {
 
     // Llama al endpoint que confirma una reserva
